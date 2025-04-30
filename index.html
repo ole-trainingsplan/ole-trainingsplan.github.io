@@ -455,418 +455,556 @@
     
     <script>
         // Trainingspläne für die Wochen A, B und C
-        const trainingPlans = {
-            'A': [
-                { day: 'Mo', workout: 'Push' },
-                { day: 'Di', workout: 'Pause' },
-                { day: 'Mi', workout: 'Pull' },
-                { day: 'Do', workout: 'Pause' },
-                { day: 'Fr', workout: 'Beine/Core' },
-                { day: 'Sa', workout: 'Push' },
-                { day: 'So', workout: 'Pull' }
-            ],
-            'B': [
-                { day: 'Mo', workout: 'Push' },
-                { day: 'Di', workout: 'Pause' },
-                { day: 'Mi', workout: 'Beine/Core' },
-                { day: 'Do', workout: 'Pause' },
-                { day: 'Fr', workout: 'Pull' },
-                { day: 'Sa', workout: 'Push' },
-                { day: 'So', workout: 'Beine/Core' }
-            ],
-            'C': [
-                { day: 'Mo', workout: 'Pull' },
-                { day: 'Di', workout: 'Pause' },
-                { day: 'Mi', workout: 'Beine/Core' },
-                { day: 'Do', workout: 'Pause' },
-                { day: 'Fr', workout: 'Push' },
-                { day: 'Sa', workout: 'Pull' },
-                { day: 'So', workout: 'Beine/Core' }
-            ]
-        };
-        
-        // Globaler Zustand für die App
-        const state = {
-            currentWeek: 'A',
-            data: {
-                ole: {},
-                jamie: {}
-            }
-        };
-        
-        // Konstanten für GitHub API
-        const REPO_OWNER = 'ole-trainingsplan';
-        const REPO_NAME = 'ole-trainingsplan.github.io';
-        const FILE_PATH = 'data.json';
-        const GITHUB_TOKEN = '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'; // Ersetze dies mit deinem tatsächlichen Token
-        
-        // DOM-Elemente
-        const weekButtons = document.querySelectorAll('.week-btn');
-        const oleWorkoutsContainer = document.getElementById('ole-workouts');
-        const jamieWorkoutsContainer = document.getElementById('jamie-workouts');
-        const saveButton = document.getElementById('save-btn');
-        const resetButton = document.getElementById('reset-btn');
-        const statusMessage = document.getElementById('status-message');
-        const saveSpinner = document.getElementById('save-spinner');
-        const currentDateElement = document.getElementById('current-date');
-        
-        // Aktuelles Datum und automatische Wochenauswahl
-        function getCurrentWeek() {
-            // Startdatum für den Wochenrhythmus
-            const startDate = new Date('2025-04-15'); // Anpassbar: Definiere das Startdatum für Woche A
-            const today = new Date();
-            
-            // Berechne die Differenz in Tagen
-            const diffTime = Math.abs(today - startDate);
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            
-            // Berechne die aktuelle Woche im 3-Wochen-Zyklus
-            const weekCycle = Math.floor(diffDays / 7) % 3;
-            
-            // Wandle in Buchstaben um
-            const weeks = ['A', 'B', 'C'];
-            return weeks[weekCycle];
+const trainingPlans = {
+    'A': [
+        { day: 'Mo', workout: 'Push' },
+        { day: 'Di', workout: 'Pause' },
+        { day: 'Mi', workout: 'Pull' },
+        { day: 'Do', workout: 'Pause' },
+        { day: 'Fr', workout: 'Beine/Core' },
+        { day: 'Sa', workout: 'Push' },
+        { day: 'So', workout: 'Pull' }
+    ],
+    'B': [
+        { day: 'Mo', workout: 'Push' },
+        { day: 'Di', workout: 'Pause' },
+        { day: 'Mi', workout: 'Beine/Core' },
+        { day: 'Do', workout: 'Pause' },
+        { day: 'Fr', workout: 'Pull' },
+        { day: 'Sa', workout: 'Push' },
+        { day: 'So', workout: 'Beine/Core' }
+    ],
+    'C': [
+        { day: 'Mo', workout: 'Pull' },
+        { day: 'Di', workout: 'Pause' },
+        { day: 'Mi', workout: 'Beine/Core' },
+        { day: 'Do', workout: 'Pause' },
+        { day: 'Fr', workout: 'Push' },
+        { day: 'Sa', workout: 'Pull' },
+        { day: 'So', workout: 'Beine/Core' }
+    ]
+};
+
+// Globaler Zustand für die App
+const state = {
+    currentWeek: 'A',
+    data: {
+        ole: {},
+        jamie: {}
+    },
+    // GitHub Token wird nicht mehr im Code direkt gespeichert
+    github: {
+        token: null,
+        owner: 'ole-trainingsplan',
+        repo: 'ole-trainingsplan.github.io',
+        filePath: 'data.json'
+    }
+};
+
+// DOM-Elemente
+const weekButtons = document.querySelectorAll('.week-btn');
+const oleWorkoutsContainer = document.getElementById('ole-workouts');
+const jamieWorkoutsContainer = document.getElementById('jamie-workouts');
+const saveButton = document.getElementById('save-btn');
+const resetButton = document.getElementById('reset-btn');
+const statusMessage = document.getElementById('status-message');
+const saveSpinner = document.getElementById('save-spinner');
+const currentDateElement = document.getElementById('current-date');
+
+// Aktuelles Datum und automatische Wochenauswahl
+function getCurrentWeek() {
+    // Startdatum für den Wochenrhythmus
+    const startDate = new Date('2025-04-15'); // Anpassbar: Definiere das Startdatum für Woche A
+    const today = new Date();
+    
+    // Berechne die Differenz in Tagen
+    const diffTime = Math.abs(today - startDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Berechne die aktuelle Woche im 3-Wochen-Zyklus
+    const weekCycle = Math.floor(diffDays / 7) % 3;
+    
+    // Wandle in Buchstaben um
+    const weeks = ['A', 'B', 'C'];
+    return weeks[weekCycle];
+}
+
+// Aktualisiere das aktuelle Datum
+function updateCurrentDate() {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const today = new Date();
+    currentDateElement.textContent = today.toLocaleDateString('de-DE', options);
+}
+
+// Initialisierung der Benutzeroberfläche
+function initUI() {
+    // Setze aktuelle Woche
+    state.currentWeek = getCurrentWeek();
+    updateCurrentDate();
+    
+    // Aktiviere den entsprechenden Button
+    weekButtons.forEach(btn => {
+        if (btn.dataset.week === state.currentWeek) {
+            btn.classList.add('active');
         }
         
-        // Aktualisiere das aktuelle Datum
-        function updateCurrentDate() {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const today = new Date();
-            currentDateElement.textContent = today.toLocaleDateString('de-DE', options);
+        // Event-Listener für Wochen-Buttons
+        btn.addEventListener('click', () => {
+            weekButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.currentWeek = btn.dataset.week;
+            renderWorkouts();
+        });
+    });
+    
+    // Event-Listener für Save-Button
+    saveButton.addEventListener('click', saveData);
+    
+    // Event-Listener für Reset-Button
+    resetButton.addEventListener('click', resetData);
+    
+    // Rendere initiale Workouts
+    renderWorkouts();
+    
+    // Lade lokale Daten zuerst
+    loadLocalData();
+    
+    // Frage nach dem GitHub-Token beim Start
+    promptForGitHubToken();
+}
+
+// Prompt für den GitHub-Token
+function promptForGitHubToken() {
+    // Prüfe, ob ein Token im LocalStorage gespeichert ist
+    const savedToken = localStorage.getItem('github-token');
+    
+    if (savedToken) {
+        state.github.token = savedToken;
+        loadDataFromGitHub();
+        return;
+    }
+    
+    // Erstelle ein modales Dialog-Element
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = '1000';
+    
+    const modalContent = document.createElement('div');
+    modalContent.style.backgroundColor = 'var(--card-bg)';
+    modalContent.style.padding = '20px';
+    modalContent.style.borderRadius = '10px';
+    modalContent.style.width = '90%';
+    modalContent.style.maxWidth = '500px';
+    
+    modalContent.innerHTML = `
+        <h2 style="margin-bottom: 20px;">GitHub-Token eingeben</h2>
+        <p style="margin-bottom: 15px;">Um Daten auf GitHub zu speichern, benötigst du einen persönlichen Access-Token mit 'repo'-Berechtigungen.</p>
+        <p style="margin-bottom: 15px;">Du kannst einen Token erstellen unter: <a href="https://github.com/settings/tokens" target="_blank" style="color: var(--accent);">https://github.com/settings/tokens</a></p>
+        <div style="margin-bottom: 15px;">
+            <input type="password" id="token-input" placeholder="GitHub Token eingeben" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--border); background: rgba(255,255,255,0.1); color: var(--text);">
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <button id="save-token-btn" style="background-color: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">Token speichern</button>
+            <button id="skip-token-btn" style="background-color: var(--card-bg); color: var(--text-secondary); border: 1px solid var(--border); padding: 10px 15px; border-radius: 5px; cursor: pointer;">Überspringen</button>
+        </div>
+    `;
+    
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Event-Listener für die Buttons im Modal
+    document.getElementById('save-token-btn').addEventListener('click', () => {
+        const token = document.getElementById('token-input').value.trim();
+        
+        if (token) {
+            // Speichere den Token im State und im localStorage
+            state.github.token = token;
+            localStorage.setItem('github-token', token);
+            
+            // Lade Daten von GitHub
+            loadDataFromGitHub();
+        } else {
+            alert('Bitte gib einen gültigen Token ein oder klicke auf "Überspringen".');
+            return;
         }
         
-        // Initialisierung der Benutzeroberfläche
-        function initUI() {
-            // Setze aktuelle Woche
-            state.currentWeek = getCurrentWeek();
-            updateCurrentDate();
+        // Entferne das Modal
+        document.body.removeChild(modal);
+    });
+    
+    document.getElementById('skip-token-btn').addEventListener('click', () => {
+        // Entferne das Modal ohne Token zu speichern
+        document.body.removeChild(modal);
+        showStatusMessage('GitHub-Synchronisation übersprungen. Daten werden nur lokal gespeichert.', false);
+    });
+}
+
+// Rendere Workouts für aktuelle Woche
+function renderWorkouts() {
+    oleWorkoutsContainer.innerHTML = '';
+    jamieWorkoutsContainer.innerHTML = '';
+    
+    const weekPlan = trainingPlans[state.currentWeek];
+    
+    weekPlan.forEach((day, index) => {
+        // Ole's Workout-Karte
+        const oleCard = createDayCard(day, 'ole', index);
+        oleWorkoutsContainer.appendChild(oleCard);
+        
+        // Jamie's Workout-Karte
+        const jamieCard = createDayCard(day, 'jamie', index);
+        jamieWorkoutsContainer.appendChild(jamieCard);
+    });
+    
+    updateStats();
+}
+
+// Erstelle eine Tageskarte für einen Benutzer
+function createDayCard(day, user, index) {
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    
+    if (day.workout === 'Pause') {
+        card.classList.add('rest');
+    }
+    
+    // Erstelle eine eindeutige ID für diesen Tag
+    const dayId = `${state.currentWeek}-${index}`;
+    
+    // Überprüfe, ob der Tag abgeschlossen ist
+    if (state.data[user] && state.data[user][dayId] && state.data[user][dayId].completed) {
+        card.classList.add('completed');
+    }
+    
+    card.innerHTML = `
+        <div class="day-header">
+            <span class="day-name">${day.day}</span>
+            <span class="workout-type">${day.workout}</span>
+        </div>
+        ${day.workout !== 'Pause' ? `
+            <div class="day-controls">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="${user}-${dayId}-check" ${state.data[user] && state.data[user][dayId] && state.data[user][dayId].completed ? 'checked' : ''}>
+                    <label for="${user}-${dayId}-check">Abgeschlossen</label>
+                </div>
+                <input type="number" id="${user}-${dayId}-minutes" min="0" max="180" value="${state.data[user] && state.data[user][dayId] ? state.data[user][dayId].minutes || 0 : 0}">
+                <span class="minutes-label">Minuten</span>
+            </div>
+        ` : '<div class="day-controls"><em>Ruhetag</em></div>'}
+    `;
+    
+    // Event-Listener für Checkboxen und Minuten-Eingabe
+    if (day.workout !== 'Pause') {
+        setTimeout(() => {
+            const checkbox = document.getElementById(`${user}-${dayId}-check`);
+            const minutesInput = document.getElementById(`${user}-${dayId}-minutes`);
             
-            // Aktiviere den entsprechenden Button
-            weekButtons.forEach(btn => {
-                if (btn.dataset.week === state.currentWeek) {
-                    btn.classList.add('active');
+            checkbox.addEventListener('change', () => {
+                if (!state.data[user]) state.data[user] = {};
+                if (!state.data[user][dayId]) state.data[user][dayId] = {};
+                
+                state.data[user][dayId].completed = checkbox.checked;
+                
+                if (checkbox.checked) {
+                    card.classList.add('completed');
+                } else {
+                    card.classList.remove('completed');
                 }
                 
-                // Event-Listener für Wochen-Buttons
-                btn.addEventListener('click', () => {
-                    weekButtons.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    state.currentWeek = btn.dataset.week;
-                    renderWorkouts();
-                });
+                updateStats();
+                saveLocalData(); // Speichere automatisch in localStorage
             });
             
-            // Event-Listener für Save-Button
-            saveButton.addEventListener('click', saveData);
-            
-            // Event-Listener für Reset-Button
-            resetButton.addEventListener('click', resetData);
-            
-            // Rendere initiale Workouts
-            renderWorkouts();
-            
-            // Lade gespeicherte Daten
-            loadData();
-        }
-        
-        // Rendere Workouts für aktuelle Woche
-        function renderWorkouts() {
-            oleWorkoutsContainer.innerHTML = '';
-            jamieWorkoutsContainer.innerHTML = '';
-            
-            const weekPlan = trainingPlans[state.currentWeek];
-            
-            weekPlan.forEach((day, index) => {
-                // Ole's Workout-Karte
-                const oleCard = createDayCard(day, 'ole', index);
-                oleWorkoutsContainer.appendChild(oleCard);
+            minutesInput.addEventListener('input', () => {
+                if (!state.data[user]) state.data[user] = {};
+                if (!state.data[user][dayId]) state.data[user][dayId] = {};
                 
-                // Jamie's Workout-Karte
-                const jamieCard = createDayCard(day, 'jamie', index);
-                jamieWorkoutsContainer.appendChild(jamieCard);
+                state.data[user][dayId].minutes = parseInt(minutesInput.value) || 0;
+                updateStats();
+                saveLocalData(); // Speichere automatisch in localStorage
             });
+        }, 0);
+    }
+    
+    return card;
+}
+
+// Aktualisiere die Statistiken
+function updateStats() {
+    // Berechne Statistiken für Ole
+    updateUserStats('ole');
+    
+    // Berechne Statistiken für Jamie
+    updateUserStats('jamie');
+}
+
+// Aktualisiere Statistiken für einen Benutzer
+function updateUserStats(user) {
+    const completionElement = document.getElementById(`${user}-completion`);
+    const totalMinutesElement = document.getElementById(`${user}-total-minutes`);
+    
+    let totalWorkoutDays = 0;
+    let completedWorkoutDays = 0;
+    let totalMinutes = 0;
+    
+    // Hole aktuelle Woche
+    const weekPlan = trainingPlans[state.currentWeek];
+    
+    weekPlan.forEach((day, index) => {
+        if (day.workout !== 'Pause') {
+            totalWorkoutDays++;
             
-            updateStats();
-        }
-        
-        // Erstelle eine Tageskarte für einen Benutzer
-        function createDayCard(day, user, index) {
-            const card = document.createElement('div');
-            card.className = 'day-card';
-            
-            if (day.workout === 'Pause') {
-                card.classList.add('rest');
-            }
-            
-            // Erstelle eine eindeutige ID für diesen Tag
             const dayId = `${state.currentWeek}-${index}`;
             
-            // Überprüfe, ob der Tag abgeschlossen ist
-            if (state.data[user] && state.data[user][dayId] && state.data[user][dayId].completed) {
-                card.classList.add('completed');
-            }
-            
-            card.innerHTML = `
-                <div class="day-header">
-                    <span class="day-name">${day.day}</span>
-                    <span class="workout-type">${day.workout}</span>
-                </div>
-                ${day.workout !== 'Pause' ? `
-                    <div class="day-controls">
-                        <div class="checkbox-wrapper">
-                            <input type="checkbox" id="${user}-${dayId}-check" ${state.data[user] && state.data[user][dayId] && state.data[user][dayId].completed ? 'checked' : ''}>
-                            <label for="${user}-${dayId}-check">Abgeschlossen</label>
-                        </div>
-                        <input type="number" id="${user}-${dayId}-minutes" min="0" max="180" value="${state.data[user] && state.data[user][dayId] ? state.data[user][dayId].minutes || 0 : 0}">
-                        <span class="minutes-label">Minuten</span>
-                    </div>
-                ` : '<div class="day-controls"><em>Ruhetag</em></div>'}
-            `;
-            
-            // Event-Listener für Checkboxen und Minuten-Eingabe
-            if (day.workout !== 'Pause') {
-                setTimeout(() => {
-                    const checkbox = document.getElementById(`${user}-${dayId}-check`);
-                    const minutesInput = document.getElementById(`${user}-${dayId}-minutes`);
-                    
-                    checkbox.addEventListener('change', () => {
-                        if (!state.data[user]) state.data[user] = {};
-                        if (!state.data[user][dayId]) state.data[user][dayId] = {};
-                        
-                        state.data[user][dayId].completed = checkbox.checked;
-                        
-                        if (checkbox.checked) {
-                            card.classList.add('completed');
-                        } else {
-                            card.classList.remove('completed');
-                        }
-                        
-                        updateStats();
-                    });
-                    
-                    minutesInput.addEventListener('input', () => {
-                        if (!state.data[user]) state.data[user] = {};
-                        if (!state.data[user][dayId]) state.data[user][dayId] = {};
-                        
-                        state.data[user][dayId].minutes = parseInt(minutesInput.value) || 0;
-                        updateStats();
-                    });
-                }, 0);
-            }
-            
-            return card;
-        }
-        
-        // Aktualisiere die Statistiken
-        function updateStats() {
-            // Berechne Statistiken für Ole
-            updateUserStats('ole');
-            
-            // Berechne Statistiken für Jamie
-            updateUserStats('jamie');
-        }
-        
-        // Aktualisiere Statistiken für einen Benutzer
-        function updateUserStats(user) {
-            const userContainer = user === 'ole' ? oleWorkoutsContainer : jamieWorkoutsContainer;
-            const completionElement = document.getElementById(`${user}-completion`);
-            const totalMinutesElement = document.getElementById(`${user}-total-minutes`);
-            
-            let totalWorkoutDays = 0;
-            let completedWorkoutDays = 0;
-            let totalMinutes = 0;
-            
-            // Hole aktuelle Woche
-            const weekPlan = trainingPlans[state.currentWeek];
-            
-            weekPlan.forEach((day, index) => {
-                if (day.workout !== 'Pause') {
-                    totalWorkoutDays++;
-                    
-                    const dayId = `${state.currentWeek}-${index}`;
-                    
-                    if (state.data[user] && state.data[user][dayId]) {
-                        if (state.data[user][dayId].completed) {
-                            completedWorkoutDays++;
-                        }
-                        
-                        totalMinutes += state.data[user][dayId].minutes || 0;
-                    }
+            if (state.data[user] && state.data[user][dayId]) {
+                if (state.data[user][dayId].completed) {
+                    completedWorkoutDays++;
                 }
-            });
-            
-            // Berechne Prozentsatz
-            const completionPercentage = totalWorkoutDays === 0 ? 0 : Math.round((completedWorkoutDays / totalWorkoutDays) * 100);
-            
-            // Aktualisiere UI
-            completionElement.textContent = `${completionPercentage}%`;
-            totalMinutesElement.textContent = totalMinutes;
-        }
-        
-        // Zeige eine Statusmeldung an
-        function showStatusMessage(message, isError = false) {
-            statusMessage.textContent = message;
-            statusMessage.style.display = 'block';
-            
-            if (isError) {
-                statusMessage.className = 'status-message error';
-            } else {
-                statusMessage.className = 'status-message success';
+                
+                totalMinutes += state.data[user][dayId].minutes || 0;
             }
+        }
+    });
+    
+    // Berechne Prozentsatz
+    const completionPercentage = totalWorkoutDays === 0 ? 0 : Math.round((completedWorkoutDays / totalWorkoutDays) * 100);
+    
+    // Aktualisiere UI
+    completionElement.textContent = `${completionPercentage}%`;
+    totalMinutesElement.textContent = totalMinutes;
+}
+
+// Zeige eine Statusmeldung an
+function showStatusMessage(message, isError = false) {
+    statusMessage.textContent = message;
+    statusMessage.style.display = 'block';
+    
+    if (isError) {
+        statusMessage.className = 'status-message error';
+    } else {
+        statusMessage.className = 'status-message success';
+    }
+    
+    setTimeout(() => {
+        statusMessage.style.display = 'none';
+    }, 5000);
+}
+
+// Speichere Daten im localStorage (als Fallback)
+function saveLocalData() {
+    try {
+        localStorage.setItem('training-plan-data', JSON.stringify(state.data));
+        console.log('Daten im localStorage gespeichert');
+    } catch (error) {
+        console.error('Fehler beim Speichern im localStorage:', error);
+    }
+}
+
+// Lade Daten aus dem localStorage (als Fallback)
+function loadLocalData() {
+    try {
+        const savedData = localStorage.getItem('training-plan-data');
+        if (savedData) {
+            state.data = JSON.parse(savedData);
+            renderWorkouts();
+            console.log('Daten aus localStorage geladen');
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden aus localStorage:', error);
+    }
+}
+
+// Lade Daten von GitHub
+async function loadDataFromGitHub() {
+    if (!state.github.token) {
+        console.log('Kein GitHub-Token vorhanden, überspringe GitHub-Laden');
+        return;
+    }
+    
+    try {
+        const apiUrl = `https://api.github.com/repos/${state.github.owner}/${state.github.repo}/contents/${state.github.filePath}`;
+        
+        console.log('Lade Daten von GitHub...');
+        const response = await fetch(apiUrl, {
+            headers: {
+                'Authorization': `token ${state.github.token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        });
+        
+        if (response.ok) {
+            const fileData = await response.json();
             
+            // Dekodiere Base64-Inhalt
+            const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
+            const data = JSON.parse(decodedContent);
+            
+            state.data = data;
+            renderWorkouts(); // Aktualisiere die UI mit den geladenen Daten
+            showStatusMessage('Daten erfolgreich von GitHub geladen');
+            
+            // Speichere auch in localStorage als Backup
+            saveLocalData();
+        } else if (response.status === 404) {
+            console.log('Keine Datendatei auf GitHub gefunden. Verwende lokale Daten.');
+            showStatusMessage('Keine gespeicherten Daten auf GitHub gefunden. Verwende lokale Daten.');
+        } else if (response.status === 401) {
+            console.error('Ungültiger GitHub-Token. Bitte überprüfe deine Anmeldedaten.');
+            showStatusMessage('Ungültiger GitHub-Token. Bitte überprüfe deine Anmeldedaten.', true);
+            localStorage.removeItem('github-token'); // Entferne den ungültigen Token
+            state.github.token = null;
+            // Zeige erneut das Token-Eingabefenster an
             setTimeout(() => {
-                statusMessage.style.display = 'none';
-            }, 5000);
+                promptForGitHubToken();
+            }, 1000);
+        } else {
+            const errorText = await response.text();
+            console.error('Fehler beim Laden von GitHub:', response.status, errorText);
+            showStatusMessage(`Fehler beim Laden von GitHub: ${response.status}`, true);
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Daten von GitHub:', error);
+        showStatusMessage(`Fehler beim Laden: ${error.message}`, true);
+    }
+}
+
+// Speichere Daten auf GitHub
+async function saveData() {
+    // Speichere immer zuerst im localStorage als Backup
+    saveLocalData();
+    
+    // Zeige Lade-Animation
+    saveSpinner.style.display = 'inline-block';
+    saveButton.disabled = true;
+    
+    try {
+        // Prüfe, ob ein GitHub-Token vorhanden ist
+        if (!state.github.token) {
+            promptForGitHubToken();
+            showStatusMessage('Bitte gib deinen GitHub-Token ein, um die Daten zu speichern');
+            saveSpinner.style.display = 'none';
+            saveButton.disabled = false;
+            return;
         }
         
-        // Lade gespeicherte Daten von GitHub
-        async function loadData() {
-            try {
-                // Verwende den festen GitHub Token für authentifizierten Zugriff
-                const token = GITHUB_TOKEN;
-                
-                if (token === 'ghp_your_github_token_here') {
-                    showStatusMessage('Bitte ersetze zuerst den Platzhalter-Token im Code', true);
-                    return;
-                }
-                
-                const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-                
-                console.log('Lade Daten von GitHub...');
-                const response = await fetch(apiUrl, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    }
-                });
-                
-                if (response.ok) {
-                    const fileData = await response.json();
-                    
-                    // Dekodiere Base64-Inhalt
-                    const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
-                    const data = JSON.parse(decodedContent);
-                    
-                    state.data = data;
-                    renderWorkouts(); // Aktualisiere die UI mit den geladenen Daten
-                    showStatusMessage('Daten erfolgreich geladen');
-                } else if (response.status === 404) {
-                    console.log('Keine Datendatei gefunden. Beginne mit leeren Daten.');
-                    showStatusMessage('Keine gespeicherten Daten gefunden. Beginne mit leeren Daten.');
-                } else {
-                    const errorText = await response.text();
-                    console.error('Fehler beim Laden:', response.status, errorText);
-                    showStatusMessage(`Fehler beim Laden: ${response.status} ${errorText}`, true);
-                }
-            } catch (error) {
-                console.error('Fehler beim Laden der Daten:', error);
-                showStatusMessage(`Fehler beim Laden: ${error.message}`, true);
+        // Hole zuerst den aktuellen Stand des Files und seinen SHA-Wert
+        const getFileUrl = `https://api.github.com/repos/${state.github.owner}/${state.github.repo}/contents/${state.github.filePath}`;
+        
+        console.log('Versuche das Repository abzufragen...');
+        const getFileResponse = await fetch(getFileUrl, {
+            headers: {
+                'Authorization': `token ${state.github.token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'X-GitHub-Api-Version': '2022-11-28'
             }
+        });
+        
+        let sha;
+        let fileExists = true;
+        
+        if (getFileResponse.ok) {
+            console.log('Datei gefunden, erhalte SHA...');
+            const fileData = await getFileResponse.json();
+            sha = fileData.sha;
+        } else if (getFileResponse.status === 404) {
+            console.log('Datei existiert noch nicht...');
+            fileExists = false;
+        } else if (getFileResponse.status === 401) {
+            console.error('Ungültiger GitHub-Token. Bitte überprüfe deine Anmeldedaten.');
+            showStatusMessage('Ungültiger GitHub-Token. Bitte überprüfe deine Anmeldedaten.', true);
+            localStorage.removeItem('github-token'); // Entferne den ungültigen Token
+            state.github.token = null;
+            // Zeige erneut das Token-Eingabefenster an
+            setTimeout(() => {
+                promptForGitHubToken();
+            }, 1000);
+            throw new Error('Ungültiger GitHub-Token');
+        } else {
+            const errorText = await getFileResponse.text();
+            console.error('GitHub API Fehler:', getFileResponse.status, errorText);
+            throw new Error(`GitHub API Fehler: ${getFileResponse.status} ${errorText}`);
         }
         
-        // Speichere Daten auf GitHub
-        async function saveData() {
-            // Zeige Lade-Animation
-            saveSpinner.style.display = 'inline-block';
-            saveButton.disabled = true;
-            
-            try {
-                // Verwende den festen GitHub Token
-                const token = GITHUB_TOKEN;
-                
-                if (token === 'ghp_your_github_token_here') {
-                    showStatusMessage('Bitte ersetze den Platzhalter mit deinem echten GitHub Token im Code', true);
-                    saveSpinner.style.display = 'none';
-                    saveButton.disabled = false;
-                    return;
-                }
-                
-                // Hole zuerst den aktuellen Stand des Files und seinen SHA-Wert
-                const getFileUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-                
-                console.log('Versuche das Repository abzufragen...');
-                const getFileResponse = await fetch(getFileUrl, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    }
-                });
-                
-                let sha;
-                let fileExists = true;
-                
-                if (getFileResponse.ok) {
-                    console.log('Datei gefunden, erhalte SHA...');
-                    const fileData = await getFileResponse.json();
-                    sha = fileData.sha;
-                } else if (getFileResponse.status === 404) {
-                    console.log('Datei existiert noch nicht...');
-                    fileExists = false;
-                } else {
-                    const errorText = await getFileResponse.text();
-                    console.error('GitHub API Fehler:', getFileResponse.status, errorText);
-                    throw new Error(`GitHub API Fehler: ${getFileResponse.status} ${errorText}`);
-                }
-                
-                // Bereite die Daten für das Update vor
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(state.data, null, 2)))); // Base64 Kodierung mit UTF-8 Unterstützung
-                
-                const updateData = {
-                    message: 'Update Trainingsplan Daten',
-                    content: content
-                };
-                
-                if (fileExists && sha) {
-                    updateData.sha = sha;
-                }
-                
-                console.log('Sende Daten an GitHub...');
-                // Führe das Update durch
-                const updateResponse = await fetch(getFileUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github.v3+json',
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    },
-                    body: JSON.stringify(updateData)
-                });
-                
-                if (updateResponse.ok) {
-                    console.log('Speicherung erfolgreich!');
-                    showStatusMessage('Daten erfolgreich gespeichert');
-                } else {
-                    const errorData = await updateResponse.text();
-                    console.error('Fehler beim Update:', updateResponse.status, errorData);
-                    throw new Error(`Fehler beim Speichern: ${updateResponse.status} ${errorData}`);
-                }
-            } catch (error) {
-                console.error('Fehler beim Speichern der Daten:', error);
-                showStatusMessage(`Fehler beim Speichern: ${error.message}`, true);
-            } finally {
-                // Verstecke Lade-Animation
-                saveSpinner.style.display = 'none';
-                saveButton.disabled = false;
-            }
+        // Bereite die Daten für das Update vor
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(state.data, null, 2)))); // Base64 Kodierung mit UTF-8 Unterstützung
+        
+        const updateData = {
+            message: 'Update Trainingsplan Daten',
+            content: content
+        };
+        
+        if (fileExists && sha) {
+            updateData.sha = sha;
         }
         
-        // Setze alle Daten zurück
-        function resetData() {
-            if (confirm('Bist du sicher, dass du alle Einträge zurücksetzen möchtest?')) {
-                state.data = {
-                    ole: {},
-                    jamie: {}
-                };
-                renderWorkouts();
-                showStatusMessage('Alle Einträge wurden zurückgesetzt');
-            }
-        }
+        console.log('Sende Daten an GitHub...');
+        // Führe das Update durch
+        const updateResponse = await fetch(getFileUrl, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${state.github.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json',
+                'X-GitHub-Api-Version': '2022-11-28'
+            },
+            body: JSON.stringify(updateData)
+        });
         
-        // Initialisiere die App
-        document.addEventListener('DOMContentLoaded', initUI);
+        if (updateResponse.ok) {
+            console.log('Speicherung erfolgreich!');
+            showStatusMessage('Daten erfolgreich auf GitHub gespeichert');
+        } else {
+            const errorData = await updateResponse.text();
+            console.error('Fehler beim Update:', updateResponse.status, errorData);
+            throw new Error(`Fehler beim Speichern: ${updateResponse.status} ${errorData}`);
+        }
+    } catch (error) {
+        console.error('Fehler beim Speichern der Daten:', error);
+        showStatusMessage(`Fehler beim Speichern: ${error.message}`, true);
+        
+        // Als Fallback eine lokale Datei zum Download anbieten
+        const dataStr = JSON.stringify(state.data, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = 'training-plan-data.json';
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        
+        showStatusMessage('Daten lokal als JSON-Datei gespeichert', false);
+    } finally {
+        // Verstecke Lade-Animation
+        saveSpinner.style.display = 'none';
+        saveButton.disabled = false;
+    }
+}
+
+// Setze alle Daten zurück
+function resetData() {
+    if (confirm('Bist du sicher, dass du alle Einträge zurücksetzen möchtest?')) {
+        state.data = {
+            ole: {},
+            jamie: {}
+        };
+        renderWorkouts();
+        saveLocalData(); // Speichere die Zurücksetzung auch im localStorage
+        showStatusMessage('Alle Einträge wurden zurückgesetzt');
+    }
+}
+
+// Initialisiere die App
+document.addEventListener('DOMContentLoaded', initUI);
     </script>
 </body>
 </html>

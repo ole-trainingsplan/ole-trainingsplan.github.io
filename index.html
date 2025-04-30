@@ -574,6 +574,7 @@ function initUI() {
 }
 
 // Prompt für den GitHub-Token
+
 function promptForGitHubToken() {
     // Prüfe, ob ein Token im LocalStorage gespeichert ist
     const savedToken = localStorage.getItem('github-token');
@@ -607,7 +608,10 @@ function promptForGitHubToken() {
     modalContent.innerHTML = `
         <h2 style="margin-bottom: 20px;">GitHub-Token eingeben</h2>
         <p style="margin-bottom: 15px;">Um Daten auf GitHub zu speichern, benötigst du einen persönlichen Access-Token mit 'repo'-Berechtigungen.</p>
-        <p style="margin-bottom: 15px;">Du kannst einen Token erstellen unter: <a href="https://github.com/settings/tokens" target="_blank" style="color: var(--accent);">https://github.com/settings/tokens</a></p>
+        <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+            <a href="https://github.com/settings/tokens" target="_blank" style="flex: 1; padding: 10px; text-align: center; background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 5px; color: var(--accent); text-decoration: none;">Token erstellen</a>
+            <a href="https://pastebin.com/PS5nHjHZ" target="_blank" style="flex: 1; padding: 10px; text-align: center; background-color: var(--accent); border-radius: 5px; color: white; text-decoration: none;">Token hier</a>
+        </div>
         <div style="margin-bottom: 15px;">
             <input type="password" id="token-input" placeholder="GitHub Token eingeben" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--border); background: rgba(255,255,255,0.1); color: var(--text);">
         </div>

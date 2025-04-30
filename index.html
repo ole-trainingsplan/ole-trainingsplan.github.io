@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ole & Jamie – Trainingsplan Tracker</title>
+    
+    <!-- OpenGraph Meta Tags -->
+    <meta property='og:title' content='Ole & Jamie – Trainingsplan Tracker'>
+    <meta property='og:description' content='Tracke deinen Trainingsfortschritt mit unserem individuellen Wochenplan – direkt online.'>
+    <meta property='og:image' content='preview.png'>
+    <meta property='og:url' content='https://ole-trainingsplan.github.io/'>
+    <meta property='og:type' content='website'>
+    
+    <style>
+        :root {
+            --dark-bg: #121212;
+            --card-bg: #1e1e1e;
+            --accent: #0071e3;
+            --text: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --success: #34c759;
+            --warning: #ff9500;
+            --danger: #ff3b30;
+            --border: #333;
+            --item-hover: #2c2c2e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #0071e3, #00c8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .week-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            gap: 10px;
+        }
+        
+        .week-btn {
+            background-color: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .week-btn.active {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .week-btn:hover:not(.active) {
+            background-color: var(--item-hover);
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+        }
+        
+        .flex-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .trainer-column {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .trainer-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .trainer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .day-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .day-card.completed {
+            border-left: 4px solid var(--success);
+        }
+        
+        .day-card.rest {
+            opacity: 0.7;
+        }
+        
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .day-name {
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .workout-type {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .day-controls {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        
+        input[type="checkbox"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid var(--text-secondary);
+            margin-right: 8px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        input[type="checkbox"]:checked {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+        
+        input[type="checkbox"]:checked::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 6px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        input[type="number"] {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            color: var(--text);
+            width: 80px;
+            font-size: 0.9rem;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .minutes-label {
+            margin-left: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn:hover {
+            background-color: #0077ED;
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background-color: #ff4f45;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 2rem;
+        }
+        
+        .weekly-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .weekly-stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .current-week-label {
+            text-align: center;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--accent);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-message {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .status-message.success {
+            background-color: rgba(52, 199, 89, 0.2);
+            color: var(--success);
+        }
+        
+        .status-message.error {
+            background-color: rgba(255, 59, 48, 0.2);
+            color: var(--danger);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .week-btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+            
+            .trainer-column {
+                min-width: 100%;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Trainingsplan Tracker</h1>
+            <p>Ole & Jamie – Trainingsfortschritt gemeinsam verfolgen</p>
+        </header>
+        
+        <div class="card">
+            <div class="current-week-label" id="current-date"></div>
+            <div class="week-selector">
+                <button class="week-btn" data-week="A">Woche A</button>
+                <button class="week-btn" data-week="B">Woche B</button>
+                <button class="week-btn" data-week="C">Woche C</button>
+            </div>
+            
+            <div class="flex-container">
+                <div class="trainer-column">
+                    <div class="trainer-header">
+                        <div class="trainer-avatar">O</div>
+                        <h2>Ole</h2>
+                    </div>
+                    <div id="ole-workouts" class="workouts-container">
+                        <!-- Ole's workout days will be inserted here -->
+                    </div>
+                    <div class="weekly-summary">
+                        <div class="weekly-stat">
+                            <div class="stat-value" id="ole-completion">0%</div>
+                            <div class="stat-label">Abgeschlossen</div>
+                        </div>
+                        <div class="weekly-stat">
+                            <div class="stat-value" id="ole-total-minutes">0</div>
+                            <div class="stat-label">Minuten gesamt</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="trainer-column">
+                    <div class="trainer-header">
+                        <div class="trainer-avatar">J</div>
+                        <h2>Jamie</h2>
+                    </div>
+                    <div id="jamie-workouts" class="workouts-container">
+                        <!-- Jamie's workout days will be inserted here -->
+                    </div>
+                    <div class="weekly-summary">
+                        <div class="weekly-stat">
+                            <div class="stat-value" id="jamie-completion">0%</div>
+                            <div class="stat-label">Abgeschlossen</div>
+                        </div>
+                        <div class="weekly-stat">
+                            <div class="stat-value" id="jamie-total-minutes">0</div>
+                            <div class="stat-label">Minuten gesamt</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button id="save-btn" class="btn">
+                <div class="loading-spinner" id="save-spinner"></div>
+                Fortschritt speichern
+            </button>
+            <button id="reset-btn" class="btn btn-danger">Alle Einträge zurücksetzen</button>
+        </div>
+        
+        <div id="status-message" class="status-message"></div>
+        
+        <footer>
+            <p>Trainingsplan Tracker &copy; 2025 | <a href="https://github.com/ole-trainingsplan/ole-trainingsplan.github.io" style="color: var(--accent);">GitHub Repository</a></p>
+        </footer>
+    </div>
+    
+    <script>
+        // Trainingspläne für die Wochen A, B und C
+        const trainingPlans = {
+            'A': [
+                { day: 'Mo', workout: 'Push' },
+                { day: 'Di', workout: 'Pause' },
+                { day: 'Mi', workout: 'Pull' },
+                { day: 'Do', workout: 'Pause' },
+                { day: 'Fr', workout: 'Beine/Core' },
+                { day: 'Sa', workout: 'Push' },
+                { day: 'So', workout: 'Pull' }
+            ],
+            'B': [
+                { day: 'Mo', workout: 'Push' },
+                { day: 'Di', workout: 'Pause' },
+                { day: 'Mi', workout: 'Beine/Core' },
+                { day: 'Do', workout: 'Pause' },
+                { day: 'Fr', workout: 'Pull' },
+                { day: 'Sa', workout: 'Push' },
+                { day: 'So', workout: 'Beine/Core' }
+            ],
+            'C': [
+                { day: 'Mo', workout: 'Pull' },
+                { day: 'Di', workout: 'Pause' },
+                { day: 'Mi', workout: 'Beine/Core' },
+                { day: 'Do', workout: 'Pause' },
+                { day: 'Fr', workout: 'Push' },
+                { day: 'Sa', workout: 'Pull' },
+                { day: 'So', workout: 'Beine/Core' }
+            ]
+        };
+        
+        // Globaler Zustand für die App
+        const state = {
+            currentWeek: 'A',
+            data: {
+                ole: {},
+                jamie: {}
+            }
+        };
+        
+        // Konstanten für GitHub API
+        const REPO_OWNER = 'ole-trainingsplan';
+        const REPO_NAME = 'ole-trainingsplan.github.io';
+        const FILE_PATH = 'data.json';
+        const GITHUB_TOKEN = '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'; // Fester GitHub Personal Access Token
+        
+        // DOM-Elemente
+        const weekButtons = document.querySelectorAll('.week-btn');
+        const oleWorkoutsContainer = document.getElementById('ole-workouts');
+        const jamieWorkoutsContainer = document.getElementById('jamie-workouts');
+        const saveButton = document.getElementById('save-btn');
+        const resetButton = document.getElementById('reset-btn');
+        const statusMessage = document.getElementById('status-message');
+        const saveSpinner = document.getElementById('save-spinner');
+        const currentDateElement = document.getElementById('current-date');
+        
+        // Aktuelles Datum und automatische Wochenauswahl
+        function getCurrentWeek() {
+            // Startdatum für den Wochenrhythmus
+            const startDate = new Date('2025-04-15'); // Anpassbar: Definiere das Startdatum für Woche A
+            const today = new Date();
+            
+            // Berechne die Differenz in Tagen
+            const diffTime = Math.abs(today - startDate);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Berechne die aktuelle Woche im 3-Wochen-Zyklus
+            const weekCycle = Math.floor(diffDays / 7) % 3;
+            
+            // Wandle in Buchstaben um
+            const weeks = ['A', 'B', 'C'];
+            return weeks[weekCycle];
+        }
+        
+        // Aktualisiere das aktuelle Datum
+        function updateCurrentDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            currentDateElement.textContent = today.toLocaleDateString('de-DE', options);
+        }
+        
+        // Initialisierung der Benutzeroberfläche
+        function initUI() {
+            // Setze aktuelle Woche
+            state.currentWeek = getCurrentWeek();
+            updateCurrentDate();
+            
+            // Aktiviere den entsprechenden Button
+            weekButtons.forEach(btn => {
+                if (btn.dataset.week === state.currentWeek) {
+                    btn.classList.add('active');
+                }
+                
+                // Event-Listener für Wochen-Buttons
+                btn.addEventListener('click', () => {
+                    weekButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.currentWeek = btn.dataset.week;
+                    renderWorkouts();
+                });
+            });
+            
+            // Event-Listener für Save-Button
+            saveButton.addEventListener('click', saveData);
+            
+            // Event-Listener für Reset-Button
+            resetButton.addEventListener('click', resetData);
+            
+            // Rendere initiale Workouts
+            renderWorkouts();
+            
+            // Lade gespeicherte Daten
+            loadData();
+        }
+        
+        // Rendere Workouts für aktuelle Woche
+        function renderWorkouts() {
+            oleWorkoutsContainer.innerHTML = '';
+            jamieWorkoutsContainer.innerHTML = '';
+            
+            const weekPlan = trainingPlans[state.currentWeek];
+            
+            weekPlan.forEach((day, index) => {
+                // Ole's Workout-Karte
+                const oleCard = createDayCard(day, 'ole', index);
+                oleWorkoutsContainer.appendChild(oleCard);
+                
+                // Jamie's Workout-Karte
+                const jamieCard = createDayCard(day, 'jamie', index);
+                jamieWorkoutsContainer.appendChild(jamieCard);
+            });
+            
+            updateStats();
+        }
+        
+        // Erstelle eine Tageskarte für einen Benutzer
+        function createDayCard(day, user, index) {
+            const card = document.createElement('div');
+            card.className = 'day-card';
+            
+            if (day.workout === 'Pause') {
+                card.classList.add('rest');
+            }
+            
+            // Erstelle eine eindeutige ID für diesen Tag
+            const dayId = `${state.currentWeek}-${index}`;
+            
+            // Überprüfe, ob der Tag abgeschlossen ist
+            if (state.data[user] && state.data[user][dayId] && state.data[user][dayId].completed) {
+                card.classList.add('completed');
+            }
+            
+            card.innerHTML = `
+                <div class="day-header">
+                    <span class="day-name">${day.day}</span>
+                    <span class="workout-type">${day.workout}</span>
+                </div>
+                ${day.workout !== 'Pause' ? `
+                    <div class="day-controls">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="${user}-${dayId}-check" ${state.data[user] && state.data[user][dayId] && state.data[user][dayId].completed ? 'checked' : ''}>
+                            <label for="${user}-${dayId}-check">Abgeschlossen</label>
+                        </div>
+                        <input type="number" id="${user}-${dayId}-minutes" min="0" max="180" value="${state.data[user] && state.data[user][dayId] ? state.data[user][dayId].minutes || 0 : 0}">
+                        <span class="minutes-label">Minuten</span>
+                    </div>
+                ` : '<div class="day-controls"><em>Ruhetag</em></div>'}
+            `;
+            
+            // Event-Listener für Checkboxen und Minuten-Eingabe
+            if (day.workout !== 'Pause') {
+                setTimeout(() => {
+                    const checkbox = document.getElementById(`${user}-${dayId}-check`);
+                    const minutesInput = document.getElementById(`${user}-${dayId}-minutes`);
+                    
+                    checkbox.addEventListener('change', () => {
+                        if (!state.data[user]) state.data[user] = {};
+                        if (!state.data[user][dayId]) state.data[user][dayId] = {};
+                        
+                        state.data[user][dayId].completed = checkbox.checked;
+                        
+                        if (checkbox.checked) {
+                            card.classList.add('completed');
+                        } else {
+                            card.classList.remove('completed');
+                        }
+                        
+                        updateStats();
+                    });
+                    
+                    minutesInput.addEventListener('input', () => {
+                        if (!state.data[user]) state.data[user] = {};
+                        if (!state.data[user][dayId]) state.data[user][dayId] = {};
+                        
+                        state.data[user][dayId].minutes = parseInt(minutesInput.value) || 0;
+                        updateStats();
+                    });
+                }, 0);
+            }
+            
+            return card;
+        }
+        
+        // Aktualisiere die Statistiken
+        function updateStats() {
+            // Berechne Statistiken für Ole
+            updateUserStats('ole');
+            
+            // Berechne Statistiken für Jamie
+            updateUserStats('jamie');
+        }
+        
+        // Aktualisiere Statistiken für einen Benutzer
+        function updateUserStats(user) {
+            const userContainer = user === 'ole' ? oleWorkoutsContainer : jamieWorkoutsContainer;
+            const completionElement = document.getElementById(`${user}-completion`);
+            const totalMinutesElement = document.getElementById(`${user}-total-minutes`);
+            
+            let totalWorkoutDays = 0;
+            let completedWorkoutDays = 0;
+            let totalMinutes = 0;
+            
+            // Hole aktuelle Woche
+            const weekPlan = trainingPlans[state.currentWeek];
+            
+            weekPlan.forEach((day, index) => {
+                if (day.workout !== 'Pause') {
+                    totalWorkoutDays++;
+                    
+                    const dayId = `${state.currentWeek}-${index}`;
+                    
+                    if (state.data[user] && state.data[user][dayId]) {
+                        if (state.data[user][dayId].completed) {
+                            completedWorkoutDays++;
+                        }
+                        
+                        totalMinutes += state.data[user][dayId].minutes || 0;
+                    }
+                }
+            });
+            
+            // Berechne Prozentsatz
+            const completionPercentage = totalWorkoutDays === 0 ? 0 : Math.round((completedWorkoutDays / totalWorkoutDays) * 100);
+            
+            // Aktualisiere UI
+            completionElement.textContent = `${completionPercentage}%`;
+            totalMinutesElement.textContent = totalMinutes;
+        }
+        
+        // Zeige eine Statusmeldung an
+        function showStatusMessage(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.style.display = 'block';
+            
+            if (isError) {
+                statusMessage.className = 'status-message error';
+            } else {
+                statusMessage.className = 'status-message success';
+            }
+            
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Lade gespeicherte Daten von GitHub
+        async function loadData() {
+            try {
+                // Verwende den festen GitHub Token für authentifizierten Zugriff
+                const token = GITHUB_TOKEN;
+                const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+                
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const fileData = await response.json();
+                    
+                    // Dekodiere Base64-Inhalt
+                    const decodedContent = atob(fileData.content);
+                    const data = JSON.parse(decodedContent);
+                    
+                    state.data = data;
+                    renderWorkouts(); // Aktualisiere die UI mit den geladenen Daten
+                    showStatusMessage('Daten erfolgreich geladen');
+                } else {
+                    console.log('Keine gespeicherten Daten gefunden oder Fehler beim Laden');
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden der Daten:', error);
+                showStatusMessage('Keine gespeicherten Daten gefunden oder Fehler beim Laden', true);
+            }
+        }
+        
+        // Speichere Daten auf GitHub
+        async function saveData() {
+            // Zeige Lade-Animation
+            saveSpinner.style.display = 'inline-block';
+            saveButton.disabled = true;
+            
+            try {
+                // Verwende den festen GitHub Token
+                const token = GITHUB_TOKEN;
+                
+                // Hole zuerst den aktuellen Stand des Files und seinen SHA-Wert
+                const getFileUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+                const getFileResponse = await fetch(getFileUrl, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                let sha;
+                if (getFileResponse.ok) {
+                    const fileData = await getFileResponse.json();
+                    sha = fileData.sha;
+                }
+                
+                // Bereite die Daten für das Update vor
+                const content = btoa(JSON.stringify(state.data, null, 2)); // Base64 Kodierung
+                
+                const updateData = {
+                    message: 'Update Trainingsplan Daten',
+                    content: content,
+                    sha: sha // Nur nötig, wenn die Datei bereits existiert
+                };
+                
+                // Führe das Update durch
+                const updateResponse = await fetch(getFileUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (updateResponse.ok) {
+                    showStatusMessage('Daten erfolgreich gespeichert');
+                } else {
+                    const error = await updateResponse.json();
+                    throw new Error(error.message || 'Fehler beim Speichern');
+                }
+            } catch (error) {
+                console.error('Fehler beim Speichern der Daten:', error);
+                showStatusMessage(`Fehler beim Speichern: ${error.message}`, true);
+            } finally {
+                // Verstecke Lade-Animation
+                saveSpinner.style.display = 'none';
+                saveButton.disabled = false;
+            }
+        }
+        
+        // Setze alle Daten zurück
+        function resetData() {
+            if (confirm('Bist du sicher, dass du alle Einträge zurücksetzen möchtest?')) {
+                state.data = {
+                    ole: {},
+                    jamie: {}
+                };
+                renderWorkouts();
+                showStatusMessage('Alle Einträge wurden zurückgesetzt');
+            }
+        }
+        
+        // Initialisiere die App
+        document.addEventListener('DOMContentLoaded', initUI);
+    </script>
+</body>
+</html>

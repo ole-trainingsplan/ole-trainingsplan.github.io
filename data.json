@@ -1,7 +1,20 @@
 {
   "ole": {
     "C-0": {
-      "completed": false
+      "completed": false,
+      "minutes": 60
+    },
+    "C-2": {
+      "completed": false,
+      "minutes": 0
+    },
+    "A-0": {
+      "completed": true,
+      "minutes": 60
+    },
+    "A-2": {
+      "completed": true,
+      "minutes": 15
     }
   },
   "jamie": {}

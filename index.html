@@ -1197,7 +1197,7 @@ function addWeight(user) {
     const weightInput = document.getElementById(`${user}-weight`);
     const weight = parseFloat(weightInput.value);
     
-    if (isNaN(weight) || weight <= 0) {
+    if (isNaN(weight) || weight >= 0) {
         showStatusMessage(`Bitte gib ein gültiges Gewicht für ${user} ein`, true);
         return;
     }

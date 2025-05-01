@@ -1195,8 +1195,16 @@ document.addEventListener('DOMContentLoaded', initUI);
 // Gewicht hinzufügen
 function addWeight(user) {
     const weightInput = document.getElementById(`${user}-weight`);
-    const weight = parseFloat(weightInput.value);
     
+    // Normalisiere die Eingabe: Ersetze Komma durch Punkt
+    let weightValue = weightInput.value.trim().replace(',', '.');
+    const weight = parseFloat(weightValue);
+    
+    // Prüfe, ob die Eingabe ein gültiges Gewicht ist
+    if (isNaN(weight) || weight <= 0) {
+        showStatusMessage(`Bitte gib ein gültiges Gewicht für ${user} ein`, true);
+        return;
+    }
     
     const date = new Date();
     const weightEntry = {

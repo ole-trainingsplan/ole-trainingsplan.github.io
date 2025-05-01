@@ -378,6 +378,78 @@
                 margin-bottom: 10px;
             }
         }
+
+
+.weight-tracker {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.weight-input-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    align-items: center;
+}
+
+.weight-input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    color: var(--text);
+    width: 80px;
+    font-size: 0.9rem;
+}
+
+.weight-history {
+    margin-top: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.weight-entry {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+}
+
+.weight-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.weight-value {
+    font-weight: 500;
+}
+
+.calorie-input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    color: var(--text);
+    width: 80px;
+    font-size: 0.9rem;
+    margin-left: 10px;
+}
+
+.calorie-label {
+    margin-left: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.weekly-stat.calories {
+    border-left: 1px solid var(--border);
+    padding-left: 15px;
+}
     </style>
 </head>
 <body>
@@ -413,6 +485,10 @@
                             <div class="stat-value" id="ole-total-minutes">0</div>
                             <div class="stat-label">Minuten gesamt</div>
                         </div>
+                        <div class="weekly-stat calories">
+                            <div class="stat-value" id="${user}-total-calories">0</div>
+                            <div class="stat-label">Kalorien gesamt</div>
+                        </div>
                     </div>
                 </div>
                 
@@ -433,6 +509,10 @@
                             <div class="stat-value" id="jamie-total-minutes">0</div>
                             <div class="stat-label">Minuten gesamt</div>
                         </div>
+                        <div class="weekly-stat calories">
+                            <div class="stat-value" id="${user}-total-calories">0</div>
+                            <div class="stat-label">Kalorien gesamt</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -447,6 +527,40 @@
         </div>
         
         <div id="status-message" class="status-message"></div>
+
+        <div class="weight-tracker">
+            <h2>Gewichtstracker</h2>
+            
+            <div class="flex-container">
+                <div class="trainer-column">
+                    <div class="trainer-header">
+                        <div class="trainer-avatar">O</div>
+                        <h3>Ole</h3>
+                    </div>
+                    <div class="weight-input-container">
+                        <input type="number" id="ole-weight" class="weight-input" step="0.1" min="40" max="150" placeholder="kg">
+                        <button id="ole-weight-btn" class="btn">Gewicht speichern</button>
+                    </div>
+                    <div id="ole-weight-history" class="weight-history">
+                        <!-- Gewichtsverlauf wird hier angezeigt -->
+                    </div>
+                </div>
+                
+                <div class="trainer-column">
+                    <div class="trainer-header">
+                        <div class="trainer-avatar">J</div>
+                        <h3>Jamie</h3>
+                    </div>
+                    <div class="weight-input-container">
+                        <input type="number" id="jamie-weight" class="weight-input" step="0.1" min="40" max="150" placeholder="kg">
+                        <button id="jamie-weight-btn" class="btn">Gewicht speichern</button>
+                    </div>
+                    <div id="jamie-weight-history" class="weight-history">
+                        <!-- Gewichtsverlauf wird hier angezeigt -->
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <footer>
             <p>Trainingsplan Tracker &copy; 2025 | <a href="https://github.com/ole-trainingsplan/ole-trainingsplan.github.io" style="color: var(--accent);">GitHub Repository</a></p>
@@ -492,6 +606,11 @@ const state = {
         ole: {},
         jamie: {}
     },
+
+    weightHistory: {
+    ole: [],
+    jamie: []
+},
     // GitHub Token wird nicht mehr im Code direkt gespeichert
     github: {
         token: null,
@@ -555,6 +674,13 @@ function initUI() {
             state.currentWeek = btn.dataset.week;
             renderWorkouts();
         });
+        // Event-Listener für Gewichts-Buttons
+document.getElementById('ole-weight-btn').addEventListener('click', () => addWeight('ole'));
+document.getElementById('jamie-weight-btn').addEventListener('click', () => addWeight('jamie'));
+
+// Rendere initiale Gewichtsdaten
+renderWeightHistory('ole');
+renderWeightHistory('jamie');
     });
     
     // Event-Listener für Save-Button
@@ -700,7 +826,10 @@ function createDayCard(day, user, index) {
                     <label for="${user}-${dayId}-check">Abgeschlossen</label>
                 </div>
                 <input type="number" id="${user}-${dayId}-minutes" min="0" max="180" value="${state.data[user] && state.data[user][dayId] ? state.data[user][dayId].minutes || 0 : 0}">
-                <span class="minutes-label">Minuten</span>
+<span class="minutes-label">Minuten</span>
+<input type="number" id="${user}-${dayId}-calories" min="0" max="2000" value="${state.data[user] && state.data[user][dayId] ? state.data[user][dayId].calories || 0 : 0}" class="calorie-input">
+<span class="calorie-label">kcal</span>
+
             </div>
         ` : '<div class="day-controls"><em>Ruhetag</em></div>'}
     `;
@@ -735,6 +864,16 @@ function createDayCard(day, user, index) {
                 updateStats();
                 saveLocalData(); // Speichere automatisch in localStorage
             });
+            const caloriesInput = document.getElementById(`${user}-${dayId}-calories`);
+                
+caloriesInput.addEventListener('input', () => {
+    if (!state.data[user]) state.data[user] = {};
+    if (!state.data[user][dayId]) state.data[user][dayId] = {};
+    
+    state.data[user][dayId].calories = parseInt(caloriesInput.value) || 0;
+    updateStats();
+    saveLocalData();
+});
         }, 0);
     }
     
@@ -758,6 +897,7 @@ function updateUserStats(user) {
     let totalWorkoutDays = 0;
     let completedWorkoutDays = 0;
     let totalMinutes = 0;
+    let totalCalories = 0;
     
     // Hole aktuelle Woche
     const weekPlan = trainingPlans[state.currentWeek];
@@ -774,8 +914,11 @@ function updateUserStats(user) {
                 }
                 
                 totalMinutes += state.data[user][dayId].minutes || 0;
+                totalCalories += state.data[user][dayId].calories || 0;
             }
         }
+        const totalCaloriesElement = document.getElementById(`${user}-total-calories`);
+totalCaloriesElement.textContent = totalCalories;
     });
     
     // Berechne Prozentsatz
@@ -805,7 +948,10 @@ function showStatusMessage(message, isError = false) {
 // Speichere Daten im localStorage (als Fallback)
 function saveLocalData() {
     try {
-        localStorage.setItem('training-plan-data', JSON.stringify(state.data));
+        localStorage.setItem('training-plan-data', JSON.stringify({
+    data: state.data,
+    weightHistory: state.weightHistory
+}));
         console.log('Daten im localStorage gespeichert');
     } catch (error) {
         console.error('Fehler beim Speichern im localStorage:', error);
@@ -816,11 +962,22 @@ function saveLocalData() {
 function loadLocalData() {
     try {
         const savedData = localStorage.getItem('training-plan-data');
-        if (savedData) {
-            state.data = JSON.parse(savedData);
-            renderWorkouts();
-            console.log('Daten aus localStorage geladen');
+if (savedData) {
+    const parsedData = JSON.parse(savedData);
+    if (parsedData.data) {
+        state.data = parsedData.data;
+        if (parsedData.weightHistory) {
+            state.weightHistory = parsedData.weightHistory;
         }
+    } else {
+        // Abwärtskompatibilität mit altem Format
+        state.data = parsedData;
+    }
+    renderWorkouts();
+    renderWeightHistory('ole');
+    renderWeightHistory('jamie');
+    console.log('Daten aus localStorage geladen');
+}
     } catch (error) {
         console.error('Fehler beim Laden aus localStorage:', error);
     }
@@ -852,8 +1009,18 @@ async function loadDataFromGitHub() {
             const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
             const data = JSON.parse(decodedContent);
             
-            state.data = data;
+            if (data.data) {
+    state.data = data.data;
+    if (data.weightHistory) {
+        state.weightHistory = data.weightHistory;
+    }
+} else {
+    // Fallback für alte Datenstruktur
+    state.data = data;
+}
             renderWorkouts(); // Aktualisiere die UI mit den geladenen Daten
+            renderWeightHistory('ole');
+renderWeightHistory('jamie');
             showStatusMessage('Daten erfolgreich von GitHub geladen');
             
             // Speichere auch in localStorage als Backup
@@ -1009,6 +1176,63 @@ function resetData() {
 
 // Initialisiere die App
 document.addEventListener('DOMContentLoaded', initUI);
+
+
+// Gewicht hinzufügen
+function addWeight(user) {
+    const weightInput = document.getElementById(`${user}-weight`);
+    const weight = parseFloat(weightInput.value);
+    
+    if (isNaN(weight) || weight <= 0) {
+        showStatusMessage(`Bitte gib ein gültiges Gewicht für ${user} ein`, true);
+        return;
+    }
+    
+    const date = new Date();
+    const weightEntry = {
+        weight: weight,
+        date: date.toISOString()
+    };
+    
+    if (!state.weightHistory[user]) {
+        state.weightHistory[user] = [];
+    }
+    
+    state.weightHistory[user].push(weightEntry);
+    state.weightHistory[user].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    weightInput.value = '';
+    renderWeightHistory(user);
+    saveLocalData();
+    showStatusMessage(`Gewicht für ${user} gespeichert`);
+}
+
+// Gewichtsverlauf rendern
+function renderWeightHistory(user) {
+    const historyContainer = document.getElementById(`${user}-weight-history`);
+    historyContainer.innerHTML = '';
+    
+    if (!state.weightHistory[user] || state.weightHistory[user].length === 0) {
+        historyContainer.innerHTML = '<p>Noch keine Gewichtsdaten vorhanden</p>';
+        return;
+    }
+    
+    state.weightHistory[user].forEach((entry, index) => {
+        if (index > 9) return; // Zeige nur die letzten 10 Einträge
+        
+        const entryDate = new Date(entry.date);
+        const formattedDate = entryDate.toLocaleDateString('de-DE');
+        
+        const entryElement = document.createElement('div');
+        entryElement.className = 'weight-entry';
+        entryElement.innerHTML = `
+            <span class="weight-date">${formattedDate}</span>
+            <span class="weight-value">${entry.weight} kg</span>
+        `;
+        
+        historyContainer.appendChild(entryElement);
+    });
+}
     </script>
 </body>
 </html>

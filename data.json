@@ -12,7 +12,7 @@
       "A-0": {
         "completed": true,
         "minutes": 60,
-        "calories": 200
+        "calories": 201
       },
       "A-2": {
         "completed": true,
@@ -32,8 +32,6 @@
         "date": "2025-05-01T14:35:16.006Z"
       }
     ],
-    "jamie": [
-
-    ]
+    "jamie": []
   }
 }

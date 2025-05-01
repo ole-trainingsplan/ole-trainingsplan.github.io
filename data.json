@@ -11,11 +11,15 @@
     "A-0": {
       "completed": true,
       "minutes": 60,
-      "calories": 10
+      "calories": 200
     },
     "A-2": {
       "completed": true,
-      "minutes": 120
+      "minutes": 120,
+      "calories": 905
+    },
+    "A-5": {
+      "calories": 0
     }
   },
   "jamie": {}

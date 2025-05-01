@@ -10,7 +10,8 @@
     },
     "A-0": {
       "completed": true,
-      "minutes": 60
+      "minutes": 60,
+      "calories": 10
     },
     "A-2": {
       "completed": true,

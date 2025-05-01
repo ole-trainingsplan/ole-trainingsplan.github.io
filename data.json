@@ -1,26 +1,41 @@
 {
-  "ole": {
-    "C-0": {
-      "completed": false,
-      "minutes": 60
+  "data": {
+    "ole": {
+      "C-0": {
+        "completed": false,
+        "minutes": 60
+      },
+      "C-2": {
+        "completed": false,
+        "minutes": 0
+      },
+      "A-0": {
+        "completed": true,
+        "minutes": 60,
+        "calories": 200
+      },
+      "A-2": {
+        "completed": true,
+        "minutes": 120,
+        "calories": 905
+      },
+      "A-5": {
+        "calories": 0
+      }
     },
-    "C-2": {
-      "completed": false,
-      "minutes": 0
-    },
-    "A-0": {
-      "completed": true,
-      "minutes": 60,
-      "calories": 200
-    },
-    "A-2": {
-      "completed": true,
-      "minutes": 120,
-      "calories": 905
-    },
-    "A-5": {
-      "calories": 0
-    }
+    "jamie": {}
   },
-  "jamie": {}
+  "weightHistory": {
+    "ole": [
+      {
+        "weight": 70,
+        "date": "2025-05-01T14:13:35.125Z"
+      },
+      {
+        "weight": 70,
+        "date": "2025-05-01T14:13:25.486Z"
+      }
+    ],
+    "jamie": []
+  }
 }

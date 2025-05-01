@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=0.7">
     <title>Ole & Jamie – Trainingsplan Tracker</title>
     
     <!-- OpenGraph Meta Tags -->
@@ -1108,8 +1108,14 @@ async function saveData() {
             throw new Error(`GitHub API Fehler: ${getFileResponse.status} ${errorText}`);
         }
         
-        // Bereite die Daten für das Update vor
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(state.data, null, 2)))); // Base64 Kodierung mit UTF-8 Unterstützung
+        // Bereite die Daten für das Update vor - HIER IST DIE KORREKTUR
+        // Beide Datensätze (Trainingsplan und Gewicht) in ein Objekt packen
+        const completeData = {
+            data: state.data,
+            weightHistory: state.weightHistory
+        };
+        
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(completeData, null, 2)))); // Base64 Kodierung mit UTF-8 Unterstützung
         
         const updateData = {
             message: 'Update Trainingsplan Daten',
@@ -1146,7 +1152,13 @@ async function saveData() {
         showStatusMessage(`Fehler beim Speichern: ${error.message}`, true);
         
         // Als Fallback eine lokale Datei zum Download anbieten
-        const dataStr = JSON.stringify(state.data, null, 2);
+        // Hier auch die vollständigen Daten inklusive Gewichtshistorie speichern
+        const completeData = {
+            data: state.data,
+            weightHistory: state.weightHistory
+        };
+        
+        const dataStr = JSON.stringify(completeData, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
         
         const exportFileDefaultName = 'training-plan-data.json';
@@ -1163,7 +1175,6 @@ async function saveData() {
         saveButton.disabled = false;
     }
 }
-
 // Setze alle Daten zurück
 function resetData() {
     if (confirm('Bist du sicher, dass du alle Einträge zurücksetzen möchtest?')) {

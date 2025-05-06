@@ -21,6 +21,11 @@
       },
       "A-5": {
         "calories": 0
+      },
+      "B-0": {
+        "completed": true,
+        "minutes": 120,
+        "calories": 300
       }
     },
     "jamie": {}

@@ -11,21 +11,21 @@
       },
       "A-0": {
         "completed": true,
-        "minutes": 60,
-        "calories": 201
+        "minutes": 120,
+        "calories": 500
       },
       "A-2": {
-        "completed": true,
-        "minutes": 120,
-        "calories": 905
+        "completed": false,
+        "minutes": 0,
+        "calories": 0
       },
       "A-5": {
         "calories": 0
       },
       "B-0": {
-        "completed": true,
-        "minutes": 120,
-        "calories": 300
+        "completed": false,
+        "minutes": 0,
+        "calories": 0
       }
     },
     "jamie": {}
